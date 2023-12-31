@@ -2,10 +2,14 @@ document.addEventListener("DOMContentLoaded", function() {
   var container = document.getElementById("container");
   var player = document.getElementById("player");
   var target = document.getElementById("target");
+  var joystick = document.getElementById("joystick");
+  var joystickHandle = document.getElementById("joystick-handle");
 
   var containerRect = container.getBoundingClientRect();
   var playerRect = player.getBoundingClientRect();
   var targetRect = target.getBoundingClientRect();
+  var joystickRect = joystick.getBoundingClientRect();
+  var joystickHandleRect = joystickHandle.getBoundingClientRect();
 
   var score = 0;
 
@@ -93,6 +97,50 @@ document.addEventListener("DOMContentLoaded", function() {
 
     touchStartX = touchEndX;
     touchStartY = touchEndY;
+  });
+
+  // 处理虚拟摇杆事件
+  var joystickRadius = joystickRect.width / 2;
+  var joystickHandleRadius = joystickHandleRect.width / 2;
+  var isJoystickTouched = false;
+
+  function updateJoystickPosition(x, y) {
+    var centerX = joystickRect.left + joystickRadius;
+    var centerY = joystickRect.top + joystickRadius;
+    var distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+
+    if (distance <= joystickRadius - joystickHandleRadius) {
+      joystickHandle.style.left = x - joystickRect.left - joystickHandleRadius + "px";
+      joystickHandle.style.top = y - joystickRect.top - joystickHandleRadius + "px";
+    } else {
+      var angle = Math.atan2(y - centerY, x - centerX);
+      var newX = Math.cos(angle) * (joystickRadius - joystickHandleRadius);
+      var newY = Math.sin(angle) * (joystickRadius - joystickHandleRadius);
+
+      joystickHandle.style.left = newX + "px";
+      joystickHandle.style.top = newY + "px";
+    }
+  }
+
+  function resetJoystick() {
+    joystickHandle.style.left = "50%";
+    joystickHandle.style.top = "50%";
+  }
+
+  joystick.addEventListener("mousedown", function(event) {
+    isJoystickTouched = true;
+    updateJoystickPosition(event.clientX, event.clientY);
+  });
+
+  document.addEventListener("mousemove", function(event) {
+    if (isJoystickTouched) {
+      updateJoystickPosition(event.clientX, event.clientY);
+    }
+  });
+
+  document.addEventListener("mouseup", function() {
+    isJoystickTouched = false;
+    resetJoystick();
   });
 
   // 初始化游戏
